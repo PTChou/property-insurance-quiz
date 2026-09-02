@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>金融證照通關題庫系統</title>
+  <title>金融與保險證照通關題庫系統</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -18,9 +18,10 @@
   <div id="root"></div>
 
   <script type="text/babel">
-    const { useState, useEffect, useMemo } = React;
+    const { useState, useEffect, useMemo, useRef } = React;
 
-    const INITIAL_EXAM_DATABASE = {
+    // 內建基礎核心題目（當尚未掛載外部完整題庫時的預設骨幹）
+    const DEFAULT_SEED_DATABASE = {
       "人身保險": [
         { id: "L101", category: "人身保險", topic: "契約當事人與關係人", question: "人壽保險契約中，下列何者為契約當事人？", options: ["保險人及受益人", "被保險人及受益人", "要保人及保險人", "保險人及被保險人"], answer: 2, lawBasis: "《保險法》第 3、8 條", explanation: "保險契約當事人為「要保人」與「保險人」；被保險人與受益人則為契約關係人。", mnemonic: "口訣：要保人出錢、保險公司承保，兩人才是簽約當事人！" },
         { id: "L102", category: "人身保險", topic: "契約撤銷權", question: "個人兩年期以上之人壽保險契約，要保人得於收到保險單翌日起算幾日內行使契約撤銷權？", options: ["5 日", "7 日", "10 日", "15 日"], answer: 2, lawBasis: "人壽保險單示範條款第 5 條", explanation: "要保人於收到保單翌日起算 10 日內，得以書面檢同保險單向保險人撤銷契約，契約自始無效並全額無息退還已繳保費。", mnemonic: "口訣：收到保單翌日起算「想 10 天」！" },
@@ -38,24 +39,34 @@
         { id: "P106", category: "財產保險", topic: "微型電動二輪車法規", question: "依最新修正之強制汽車責任保險法，微型電動二輪車若未依規定投保強制車險，將處所有人新台幣多少罰鍰？", options: ["500 元至 1,000 元", "750 元至 1,500 元", "1,200 元至 3,000 元", "3,000 元至 15,000 元"], answer: 1, lawBasis: "《強制汽車責任保險法》第 49 條", explanation: "未依規定投保者處 750 元至 1,500 元罰鍰；機車為 1,500~3,000 元；汽車為 3,000~15,000 元。", mnemonic: "口訣：微電車 750-1500、機車 1500-3000、汽車 3000-15000！" }
       ],
       "金融市場常識": [
-        { id: "F101", category: "金融市場常識", topic: "金融市場功能", question: "下列何者不是金融市場的主要功能？", options: ["提供金融工具交易的場所", "擔任資金需求者與供給者的橋樑", "促進投資活動的效率，提升經濟發展", "提供交易者投機的場所"], answer: 3, lawBasis: "金融市場常識題庫第 1 題[cite: 1]", explanation: "金融市場之主要功能為引導資金配置，絕非提供投機場所[cite: 1]。", mnemonic: "口訣：金融市場是資金調配橋樑，不是合法賭博投機場所！" },
-        { id: "F102", category: "金融市場常識", topic: "金融主管機關架構", question: "目前國內監理銀行、票券、證券及保險等金融機構的主管機關為：", options: ["財政部", "內政部", "金融監督管理委員會", "經濟部"], answer: 2, lawBasis: "金融市場常識題庫第 7 題[cite: 1]", explanation: "金管會統一掌理所有金融市場監理[cite: 1]。", mnemonic: "口訣：台灣金融大總管＝金管會！" },
-        { id: "F103", category: "金融市場常識", topic: "初級與次級市場", question: "下列那個市場主要是買賣「已發行流通」的證券？", options: ["發行市場", "短期資金市場", "初級市場", "次級市場"], answer: 3, lawBasis: "金融市場常識題庫第 15 題[cite: 1]", explanation: "初級市場是新發行籌資，次級市場為二手流通交易市場[cite: 1]。", mnemonic: "口訣：初級是新發行、次級是二手流通買賣！" },
-        { id: "F104", category: "金融市場常識", topic: "資本市場與貨幣市場", question: "區分「資本市場」和「貨幣市場」的差異主要在於：", options: ["金管會核准發行的數量", "證券發行期限的長短", "證券收益率", "以上皆是"], answer: 1, lawBasis: "金融市場常識題庫第 16 題[cite: 1]", explanation: "一年期以內為貨幣市場；一年期以上為資本市場[cite: 1]。", mnemonic: "口訣：一年以內叫貨幣，一年以上叫資本！" },
-        { id: "F105", category: "金融市場常識", topic: "洗錢防制申報門檻", question: "洗錢防制法規定金融機構對於達一定金額以上之單筆現金通貨交易應向指定機構申報，該金額為：", options: ["25 萬元", "50 萬元", "75 萬元", "100 萬元"], answer: 1, lawBasis: "金融市場常識題庫第 81 題[cite: 1]", explanation: "單筆現金收付或換鈔達新台幣 50 萬元以上之通貨交易應申報[cite: 1]。", mnemonic: "口訣：大額現金 50 萬，身分登記報調查局！" },
-        { id: "F106", category: "金融市場常識", topic: "存款保險保障", question: "現行每一存款人在同一家金融機構存款保險的最高保額為新台幣多少元？", options: ["新台幣 100 萬元", "新台幣 150 萬元", "新台幣 300 萬元", "新台幣 500 萬元"], answer: 2, lawBasis: "金融市場常識題庫第 84 題[cite: 1]", explanation: "中央存保每一存款人最高保額為新台幣 300 萬元整[cite: 1]。", mnemonic: "口訣：存保最高理賠 300 萬！" }
+        { id: "F101", category: "金融市場常識", topic: "金融市場功能", question: "下列何者不是金融市場的主要功能？", options: ["提供金融工具交易的場所", "擔任資金需求者與供給者的橋樑", "促進投資活動的效率，提升經濟發展", "提供交易者投機的場所"], answer: 3, lawBasis: "金融市場常識題庫第 1 題", explanation: "金融市場之主要功能為引導資金配置，絕非提供投機場所[cite: 1]。", mnemonic: "口訣：金融市場是資金調配橋樑，不是合法賭博投機場所！" },
+        { id: "F102", category: "金融市場常識", topic: "金融主管機關架構", question: "目前國內監理銀行、票券、證券及保險等金融機構的主管機關為：", options: ["財政部", "內政部", "金融監督管理委員會", "經濟部"], answer: 2, lawBasis: "金融市場常識題庫第 7 題", explanation: "金管會統一掌理所有金融市場監理[cite: 1]。", mnemonic: "口訣：台灣金融大總管＝金管會！" },
+        { id: "F103", category: "金融市場常識", topic: "初級與次級市場", question: "下列那個市場主要是買賣「已發行流通」的證券？", options: ["發行市場", "短期資金市場", "初級市場", "次級市場"], answer: 3, lawBasis: "金融市場常識題庫第 15 題", explanation: "初級市場是新發行籌資，次級市場為二手流通交易市場[cite: 1]。", mnemonic: "口訣：初級是新發行、次級是二手流通買賣！" },
+        { id: "F104", category: "金融市場常識", topic: "資本市場與貨幣市場", question: "區分「資本市場」和「貨幣市場」的差異主要在於：", options: ["金管會核准發行的數量", "證券發行期限的長短", "證券收益率", "以上皆是"], answer: 1, lawBasis: "金融市場常識題庫第 16 題", explanation: "一年期以內為貨幣市場；一年期以上為資本市場[cite: 1]。", mnemonic: "口訣：一年以內叫貨幣，一年以上叫資本！" },
+        { id: "F105", category: "金融市場常識", topic: "洗錢防制申報門檻", question: "洗錢防制法規定金融機構對於達一定金額以上之單筆現金通貨交易應向指定機構申報，該金額為：", options: ["25 萬元", "50 萬元", "75 萬元", "100 萬元"], answer: 1, lawBasis: "金融市場常識題庫第 81 題", explanation: "單筆現金收付或換鈔達新台幣 50 萬元以上之通貨交易應申報[cite: 1]。", mnemonic: "口訣：大額現金 50 萬，身分登記報調查局！" },
+        { id: "F106", category: "金融市場常識", topic: "存款保險保障", question: "現行每一存款人在同一家金融機構存款保險的最高保額為新台幣多少元？", options: ["新台幣 100 萬元", "新台幣 150 萬元", "新台幣 300 萬元", "新台幣 500 萬元"], answer: 2, lawBasis: "金融市場常識題庫第 84 題", explanation: "中央存保每一存款人最高保額為新台幣 300 萬元整[cite: 1]。", mnemonic: "口訣：存保最高理賠 300 萬！" }
       ],
       "職業道德": [
-        { id: "E101", category: "職業道德", topic: "保險招攬規範", question: "金融從業人員從事保險招攬行為，下列那一項是錯的？", options: ["解釋保險商品內容及保單條款", "說明填寫要保書注意事項、轉送要保文件及保險單", "經所屬公司授權從事保險招攬行為", "可以向未經授權公司從事保險招攬行為"], answer: 3, lawBasis: "職業道德題庫第 1 題[cite: 2]", explanation: "業務員僅得為所屬經授權公司招攬，絕不可向未經授權公司招攬[cite: 2]。", mnemonic: "口訣：只能為自己登錄授權的公司招攬，跨公司偷賣違法！" },
-        { id: "E102", category: "職業道德", topic: "借牌與掛名懲處", question: "金融從業人員從事保險招攬時將本人登錄證提供他人進行招攬或掛名，會受到何種處分？", options: ["註銷登錄", "停止招攬 6 個月", "停止招攬 10 個月", "停止招攬 1 年"], answer: 1, lawBasis: "職業道德題庫第 5 條[cite: 2]", explanation: "借牌掛名招攬者，所屬公司應處停止招攬行為 6 個月處分[cite: 2]。", mnemonic: "口訣：借牌掛名招攬，停止招攬 6 個月起跳！" },
-        { id: "E103", category: "職業道德", topic: "獲利保證禁止", question: "投顧人員告訴投資人：「買這支股票保證六個月內給你 100% 的報酬。」違反了哪一原則？", options: ["禁止為獲利或損失負擔之保證", "公平分配原則", "忠實誠信原則", "專業原則"], answer: 0, lawBasis: "職業道德題庫第 74 題[cite: 2]", explanation: "法規嚴禁從業人員向客戶承諾保證獲利或共同承擔損失[cite: 2]。", mnemonic: "口訣：千言萬語，就是不能承諾『保證獲利』！" },
-        { id: "E104", category: "職業道德", topic: "保密原則", question: "基於職務獲得的客戶個人與交易資料，金融服務業從業人員應該如何做才正確？", options: ["轉賣給同業", "必須忠於保密原則，絕不對外洩露", "隨意丟棄在碎紙機旁", "提供給親朋好友參考"], answer: 1, lawBasis: "職業道德題庫第 431 題[cite: 2]", explanation: "對客戶資料負有法定保密義務，在職與離職後皆同[cite: 2]。", mnemonic: "口訣：客戶隱私與資料，在職離職都保密！" },
-        { id: "E105", category: "職業道德", topic: "利益衝突", question: "金融從業人員在接受客戶委託時，應將誰的利益置於其他利益之上？", options: ["委託的客戶", "公司", "自己", "其他特定大客戶"], answer: 0, lawBasis: "職業道德題庫第 146 題[cite: 2]", explanation: "忠實義務之核心為「客戶利益優先」[cite: 2]。", mnemonic: "口訣：客戶利益永遠擺第一，禁止利益衝突與自肥！" },
-        { id: "E106", category: "職業道德", topic: "代管印鑑禁止", question: "為提供便民服務，金融從業人員是否可以代客戶保管存摺、印鑑或已蓋章之空白取款條？", options: ["只要客戶同意即可", "絕對禁止代客戶保管存摺、印鑑及空白取款條", "VIP 客戶可代管", "親戚家人可代管"], answer: 1, lawBasis: "職業道德題庫第 11 題[cite: 2]", explanation: "金管會理專十誡嚴格禁止代客保管任何重要取款憑證[cite: 2]。", mnemonic: "口訣：存摺印章自己管，業務代管直接踩紅線！" }
+        { id: "E101", category: "職業道德", topic: "保險招攬規範", question: "金融從業人員從事保險招攬行為，下列那一項是錯的？", options: ["解釋保險商品內容及保單條款", "說明填寫要保書注意事項、轉送要保文件及保險單", "經所屬公司授權從事保險招攬行為", "可以向未經授權公司從事保險招攬行為"], answer: 3, lawBasis: "職業道德題庫第 1 題", explanation: "業務員僅得為所屬經授權公司招攬，絕不可向未經授權公司招攬[cite: 2]。", mnemonic: "口訣：只能為自己登錄授權的公司招攬，跨公司偷賣違法！" },
+        { id: "E102", category: "職業道德", topic: "借牌與掛名懲處", question: "金融從業人員從事保險招攬時將本人登錄證提供他人進行招攬或掛名，會受到何種處分？", options: ["註銷登錄", "停止招攬 6 個月", "停止招攬 10 個月", "停止招攬 1 年"], answer: 1, lawBasis: "職業道德題庫第 5 條", explanation: "借牌掛名招攬者，所屬公司應處停止招攬行為 6 個月處分[cite: 2]。", mnemonic: "口訣：借牌掛名招攬，停止招攬 6 個月起跳！" },
+        { id: "E103", category: "職業道德", topic: "獲利保證禁止", question: "投顧人員告訴投資人：「買這支股票保證六個月內給你 100% 的報酬。」違反了哪一原則？", options: ["禁止為獲利或損失負擔之保證", "公平分配原則", "忠實誠信原則", "專業原則"], answer: 0, lawBasis: "職業道德題庫第 74 題", explanation: "法規嚴禁從業人員向客戶承諾保證獲利或共同承擔損失[cite: 2]。", mnemonic: "口訣：千言萬語，就是不能承諾『保證獲利』！" },
+        { id: "E104", category: "職業道德", topic: "保密原則", question: "基於職務獲得的客戶個人與交易資料，金融服務業從業人員應該如何做才正確？", options: ["轉賣給同業", "必須忠於保密原則，絕不對外洩露", "隨意丟棄在碎紙機旁", "提供給親朋好友參考"], answer: 1, lawBasis: "職業道德題庫第 431 題", explanation: "對客戶資料負有法定保密義務，在職與離職後皆同[cite: 2]。", mnemonic: "口訣：客戶隱私與資料，在職離職都保密！" },
+        { id: "E105", category: "職業道德", topic: "利益衝突", question: "金融從業人員在接受客戶委託時，應將誰的利益置於其他利益之上？", options: ["委託的客戶", "公司", "自己", "其他特定大客戶"], answer: 0, lawBasis: "職業道德題庫第 146 題", explanation: "忠實義務之核心為「客戶利益優先」[cite: 2]。", mnemonic: "口訣：客戶利益永遠擺第一，禁止利益衝突與自肥！" },
+        { id: "E106", category: "職業道德", topic: "代管印鑑禁止", question: "為提供便民服務，金融從業人員是否可以代客戶保管存摺、印鑑或已蓋章之空白取款條？", options: ["只要客戶同意即可", "絕對禁止代客戶保管存摺、印鑑及空白取款條", "VIP 客戶可代管", "親戚家人可代管"], answer: 1, lawBasis: "職業道德題庫第 11 題", explanation: "金管會理專十誡嚴格禁止代客保管任何重要取款憑證[cite: 2]。", mnemonic: "口訣：存摺印章自己管，業務代管直接踩紅線！" }
       ]
     };
 
     function App() {
+      // 讀取本機是否有掛載過的自訂題庫，若無則使用預設題庫
+      const [examDatabase, setExamDatabase] = useState(() => {
+        try {
+          const saved = localStorage.getItem('fin_custom_exam_database');
+          return saved ? JSON.parse(saved) : DEFAULT_SEED_DATABASE;
+        } catch {
+          return DEFAULT_SEED_DATABASE;
+        }
+      });
+
       const [currentSubject, setCurrentSubject] = useState('人身保險');
       const [activeTab, setActiveTab] = useState('quiz');
       const [studyMode, setStudyMode] = useState(false);
@@ -71,9 +82,13 @@
       const [examFinished, setExamFinished] = useState(false);
       const [examScore, setExamScore] = useState(null);
 
+      const fileInputRef = useRef(null);
+
+      // 持久化保存
       useEffect(() => { localStorage.setItem('fin_all_bookmarks', JSON.stringify(bookmarks)); }, [bookmarks]);
       useEffect(() => { localStorage.setItem('fin_all_mistakes', JSON.stringify(mistakes)); }, [mistakes]);
 
+      // 計時器
       useEffect(() => {
         let t = null;
         if (isExamMode && !examFinished && examTimer > 0) t = setInterval(() => setExamTimer(p => p - 1), 1000);
@@ -81,7 +96,58 @@
         return () => clearInterval(t);
       }, [isExamMode, examFinished, examTimer]);
 
-      const currentSubjectQuestions = useMemo(() => INITIAL_EXAM_DATABASE[currentSubject] || [], [currentSubject]);
+      // 【核心】：掛載/匯入題庫 JSON 邏輯
+      const handleImportQuestions = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          try {
+            const data = JSON.parse(event.target.result);
+            
+            // 情況 1：匯入整包四科物件 { "人身保險": [...], "財產保險": [...] }
+            if (!Array.isArray(data) && typeof data === 'object') {
+              const updatedDB = { ...examDatabase, ...data };
+              setExamDatabase(updatedDB);
+              localStorage.setItem('fin_custom_exam_database', JSON.stringify(updatedDB));
+              alert('🎉 成功掛載外部題庫大補帖！已自動更新各科題庫並離線保存。');
+            } 
+            // 情況 2：單獨匯入當前科目的題目陣列 [ { question: ... }, ... ]
+            else if (Array.isArray(data) && data.length > 0 && data[0].question) {
+              const updatedDB = {
+                ...examDatabase,
+                [currentSubject]: data
+              };
+              setExamDatabase(updatedDB);
+              localStorage.setItem('fin_custom_exam_database', JSON.stringify(updatedDB));
+              alert(`🎉 成功掛載 ${data.length} 道考題至【${currentSubject}】！已永久保存在本機。`);
+            } else {
+              alert('❌ 題庫 JSON 格式不符合規範，請確認為合格的題庫檔案！');
+            }
+            setCurrentIdx(0);
+            setSelectedAnswers({});
+            setShowExplanation({});
+          } catch (err) {
+            alert('❌ JSON 讀取解析失敗，請確認檔案語法正確。');
+          }
+        };
+        reader.readAsText(file);
+      };
+
+      // 還原為預設題庫
+      const handleResetDatabase = () => {
+        if (confirm('確定要清除外掛題庫，還原回系統預設的核心考題嗎？')) {
+          localStorage.removeItem('fin_custom_exam_database');
+          setExamDatabase(DEFAULT_SEED_DATABASE);
+          setCurrentIdx(0);
+          setSelectedAnswers({});
+          setShowExplanation({});
+          alert('已還原為預設核心題庫。');
+        }
+      };
+
+      const currentSubjectQuestions = useMemo(() => examDatabase[currentSubject] || [], [examDatabase, currentSubject]);
       const currentSubjectBookmarks = bookmarks[currentSubject] || [];
       const currentSubjectMistakes = mistakes[currentSubject] || [];
 
@@ -92,7 +158,12 @@
         if (activeTab === 'bookmarks') list = list.filter(q => currentSubjectBookmarks.includes(q.id));
         if (searchQuery.trim()) {
           const q = searchQuery.toLowerCase();
-          list = list.filter(i => i.question.toLowerCase().includes(q) || i.topic.toLowerCase().includes(q) || i.options.some(o => o.toLowerCase().includes(q)));
+          list = list.filter(i => 
+            i.question.toLowerCase().includes(q) || 
+            (i.topic && i.topic.toLowerCase().includes(q)) || 
+            (i.explanation && i.explanation.toLowerCase().includes(q)) || 
+            (i.options && i.options.some(o => o.toLowerCase().includes(q)))
+          );
         }
         return list;
       }, [currentSubjectQuestions, activeTab, currentSubjectMistakes, currentSubjectBookmarks, searchQuery, isExamMode, examQuestions]);
@@ -146,22 +217,51 @@
 
       return (
         <div className="min-h-screen flex flex-col justify-between max-w-3xl mx-auto p-3 sm:p-5">
+          {/* Header 頂部 */}
           <header className="py-3 border-b border-slate-800 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="text-2xl">🏛️</span>
                 <div>
-                  <h1 className="font-extrabold text-base sm:text-lg text-white">金融證照四大考科題庫系統</h1>
-                  <p className="text-[11px] text-slate-400">人身 ‧ 產險 ‧ 金融市場 ‧ 職業道德</p>
+                  <h1 className="font-extrabold text-base sm:text-lg text-white flex items-center gap-2">
+                    金融證照四合一題庫系統
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-emerald-400 font-mono border border-emerald-500/30">
+                      當前題庫: {currentSubjectQuestions.length} 題
+                    </span>
+                  </h1>
+                  <p className="text-[11px] text-slate-400">支援千題外掛 ‧ 離線隨身刷題</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+
+              {/* 外掛題庫按鈕與功能鍵 */}
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleImportQuestions}
+                  accept=".json"
+                  className="hidden"
+                />
+
                 {!isExamMode ? (
                   <>
-                    <button onClick={() => setStudyMode(!studyMode)} className={`px-3 py-1.5 rounded-lg text-xs font-bold border ${studyMode ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' : 'bg-slate-800 text-slate-300 border-slate-700'}`}>
-                      {studyMode ? '📖 背題模式' : '✍️ 測驗模式'}
+                    <button
+                      onClick={() => fileInputRef.current.click()}
+                      className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-medium"
+                      title="上傳外部 questions.json 掛載更多題目"
+                    >
+                      📥 匯入題庫
                     </button>
-                    <button onClick={startMockExam} className="px-3.5 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold">
+                    <button
+                      onClick={() => setStudyMode(!studyMode)}
+                      className={`px-2.5 py-1.5 rounded-lg text-xs font-bold border ${studyMode ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' : 'bg-slate-800 text-slate-300 border-slate-700'}`}
+                    >
+                      {studyMode ? '📖 背題中' : '✍️ 測驗中'}
+                    </button>
+                    <button
+                      onClick={startMockExam}
+                      className="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold"
+                    >
                       ⚡ 模擬考
                     </button>
                   </>
@@ -173,10 +273,16 @@
                 )}
               </div>
             </div>
+
+            {/* 考科選單 */}
             {!isExamMode && (
               <div className="grid grid-cols-4 gap-1.5 bg-slate-900 p-1.5 rounded-xl border border-slate-800 text-xs font-bold text-center">
                 {['人身保險', '財產保險', '金融市場常識', '職業道德'].map(sub => (
-                  <button key={sub} onClick={() => { setCurrentSubject(sub); setCurrentIdx(0); setSelectedAnswers({}); setShowExplanation({}); }} className={`py-2 rounded-lg ${currentSubject === sub ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}>
+                  <button
+                    key={sub}
+                    onClick={() => { setCurrentSubject(sub); setCurrentIdx(0); setSelectedAnswers({}); setShowExplanation({}); }}
+                    className={`py-2 rounded-lg transition-all ${currentSubject === sub ? 'bg-emerald-600 text-white shadow font-bold' : 'text-slate-400 hover:text-white'}`}
+                  >
                     {sub}
                   </button>
                 ))}
@@ -184,14 +290,16 @@
             )}
           </header>
 
+          {/* 題庫/錯題/收藏 */}
           {!isExamMode && (
             <div className="grid grid-cols-3 gap-2 my-2.5 text-xs text-center font-medium">
-              <button onClick={() => setActiveTab('quiz')} className={`py-1.5 rounded-lg border ${activeTab === 'quiz' ? 'bg-slate-800 text-emerald-400 border-emerald-500/40 font-bold' : 'bg-slate-900 text-slate-400 border-slate-800'}`}>📚 題庫 ({currentSubjectQuestions.length})</button>
+              <button onClick={() => setActiveTab('quiz')} className={`py-1.5 rounded-lg border ${activeTab === 'quiz' ? 'bg-slate-800 text-emerald-400 border-emerald-500/40 font-bold' : 'bg-slate-900 text-slate-400 border-slate-800'}`}>📚 完整刷題 ({currentSubjectQuestions.length})</button>
               <button onClick={() => setActiveTab('mistakes')} className={`py-1.5 rounded-lg border ${activeTab === 'mistakes' ? 'bg-rose-950/60 text-rose-300 border-rose-500/40 font-bold' : 'bg-slate-900 text-slate-400 border-slate-800'}`}>❌ 錯題本 ({currentSubjectMistakes.length})</button>
-              <button onClick={() => setActiveTab('bookmarks')} className={`py-1.5 rounded-lg border ${activeTab === 'bookmarks' ? 'bg-amber-950/60 text-amber-300 border-amber-500/40 font-bold' : 'bg-slate-900 text-slate-400 border-slate-800'}`}>⭐ 收藏 ({currentSubjectBookmarks.length})</button>
+              <button onClick={() => setActiveTab('bookmarks')} className={`py-1.5 rounded-lg border ${activeTab === 'bookmarks' ? 'bg-amber-950/60 text-amber-300 border-amber-500/40 font-bold' : 'bg-slate-900 text-slate-400 border-slate-800'}`}>⭐ 收藏夾 ({currentSubjectBookmarks.length})</button>
             </div>
           )}
 
+          {/* 主體作答卡片 */}
           <main className="flex-1 space-y-3 pb-16">
             {examFinished && examScore && (
               <div className="p-5 rounded-2xl bg-slate-900 border border-slate-700 text-center space-y-2">
@@ -204,17 +312,21 @@
 
             {!isExamMode && (
               <div className="relative">
-                <input type="text" placeholder={`搜尋【${currentSubject}】考題關鍵字...`} value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setCurrentIdx(0); }} className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-200" />
+                <input type="text" placeholder={`搜尋【${currentSubject}】考題關鍵字、法條...`} value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setCurrentIdx(0); }} className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-200" />
               </div>
             )}
 
             {currentQuestion ? (
               <div className="p-4 sm:p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400">{currentQuestion.category} · {currentQuestion.topic}</span>
+                  <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-medium">{currentQuestion.category} · {currentQuestion.topic || '精選'}</span>
                   <button onClick={() => toggleBookmark(currentQuestion.id)} className="text-slate-400 hover:text-amber-400">{currentSubjectBookmarks.includes(currentQuestion.id) ? '⭐ 已收藏' : '☆ 收藏'}</button>
                 </div>
-                <p className="text-sm sm:text-base font-semibold text-slate-100">{currentIdx + 1}. {currentQuestion.question}</p>
+                <div className="space-y-1">
+                  <div className="text-[11px] text-slate-500 font-mono">第 {currentIdx + 1} 題 / 共 {filteredQuestions.length} 題（編號 #{currentQuestion.id}）</div>
+                  <p className="text-sm sm:text-base font-semibold text-slate-100">{currentQuestion.question}</p>
+                </div>
+
                 <div className="space-y-2">
                   {currentQuestion.options.map((opt, idx) => {
                     const isSelected = selectedAnswers[currentQuestion.id] === idx;
@@ -233,20 +345,30 @@
                     );
                   })}
                 </div>
+
                 {((selectedAnswers[currentQuestion.id] !== undefined && !isExamMode) || studyMode) && (
                   <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 text-xs space-y-2">
-                    <p className="text-emerald-400 font-bold">✅ 正確答案：選項 {['A','B','C','D'][currentQuestion.answer]}</p>
-                    <p className="text-slate-300">{currentQuestion.explanation}</p>
+                    <div className="flex justify-between items-center border-b border-slate-800 pb-1.5">
+                      <p className="text-emerald-400 font-bold">✅ 正確解答：選項 {['A','B','C','D'][currentQuestion.answer]}</p>
+                      {currentQuestion.lawBasis && <span className="text-[11px] text-blue-300 bg-blue-500/20 px-2 py-0.5 rounded">📜 {currentQuestion.lawBasis}</span>}
+                    </div>
+                    {currentQuestion.explanation && <p className="text-slate-300 leading-relaxed">{currentQuestion.explanation}</p>}
                     {currentQuestion.mnemonic && <div className="p-2 rounded bg-amber-500/10 border border-amber-500/30 text-amber-200">🎯 {currentQuestion.mnemonic}</div>}
                   </div>
                 )}
+
                 <div className="flex justify-between items-center pt-2 border-t border-slate-800 text-xs">
-                  <button onClick={() => setCurrentIdx(p => Math.max(0, p - 1))} disabled={currentIdx === 0} className="px-3 py-1.5 rounded-lg bg-slate-800 disabled:opacity-30">上一題</button>
+                  <button onClick={() => setCurrentIdx(p => Math.max(0, p - 1))} disabled={currentIdx === 0} className="px-3.5 py-1.5 rounded-lg bg-slate-800 disabled:opacity-30">上一題</button>
                   <span className="text-slate-400 font-mono">{currentIdx + 1} / {filteredQuestions.length}</span>
-                  <button onClick={() => setCurrentIdx(p => Math.min(filteredQuestions.length - 1, p + 1))} disabled={currentIdx === filteredQuestions.length - 1} className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-bold disabled:opacity-30">下一題</button>
+                  <button onClick={() => setCurrentIdx(p => Math.min(filteredQuestions.length - 1, p + 1))} disabled={currentIdx === filteredQuestions.length - 1} className="px-3.5 py-1.5 rounded-lg bg-emerald-600 text-white font-bold disabled:opacity-30">下一題</button>
                 </div>
               </div>
-            ) : <div className="p-8 text-center text-slate-500 text-xs bg-slate-900 rounded-xl">目前分類無題目</div>}
+            ) : (
+              <div className="p-8 text-center text-slate-500 text-xs bg-slate-900 rounded-xl space-y-2">
+                <p>目前分類無題目</p>
+                <button onClick={handleResetDatabase} className="text-[11px] text-slate-400 underline hover:text-white">點此還原預設題庫</button>
+              </div>
+            )}
           </main>
         </div>
       );
