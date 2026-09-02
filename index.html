@@ -1,533 +1,126 @@
-<!DOCTYPE html>
+﻿// 複製這段貼到瀏覽器主控台 (Console) 或網址列即可直接觸發下載
+(function downloadExamApp() {
+  const htmlContent = `<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>台灣產險業務員十年真題逐題詳解題庫系統</title>
-  
-  <!-- Tailwind CSS CDN -->
+  <title>金融與保險證照通關題庫系統</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- React & ReactDOM CDN -->
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  
-  <!-- Babel CDN -->
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
   <style>
-    body {
-      touch-action: manipulation;
-      -webkit-tap-highlight-color: transparent;
-      user-select: none;
-    }
-    .scrollbar-none::-webkit-scrollbar {
-      display: none;
-    }
-    .scrollbar-none {
-      -ms-overflow-style: none;
-      scrollbar-width: none;
-    }
+    body { touch-action: manipulation; -webkit-tap-highlight-color: transparent; user-select: none; }
+    .scrollbar-none::-webkit-scrollbar { display: none; }
+    .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
 <body class="bg-slate-950 text-slate-100 font-sans antialiased selection:bg-emerald-500 selection:text-white">
   <div id="root"></div>
-
   <script type="text/babel">
     const { useState, useEffect, useMemo } = React;
-
-    // ==================== 近十年產險業務員歷屆核心題庫（含完整法規詳解） ====================
-    const TEN_YEAR_QUESTIONS = [
-      // --- 保險法規篇 ---
-      {
-        id: 101,
-        year: '112年',
-        category: '保險法規',
-        topic: '據實告知義務與解除權',
-        question: '要保人或被保險人對於保險人之書面詢問，應誠實告知，如有故意隱匿或為不實之說明，足以變更或減少保險人對於危險之估計者，保險人得主張何種權利？',
-        options: [
-          '終止契約',
-          '解除契約',
-          '撤銷契約',
-          '拒絕給付但契約仍繼續有效'
-        ],
-        answer: 1, // B
-        lawBasis: '《保險法》第 64 條',
-        explanation: '要保人或被保險人違反告知義務時，保險人得主張「解除契約」使其自始歸於無效。',
-        details: [
-          '【除斥期間限制】：保險人之解約權自「知有解除之原因後經過一個月」不行使而消滅；或契約訂立後經過「二年」，即使有解約原因，亦不得再解除契約。',
-          '【常見混淆】：不是「終止」（終止向後失效），而是「解除」（溯及訂約時自始無效，且保險人毋庸返還已收保費）。'
-        ],
-        mnemonic: '口訣：「知一過二解除它」—— 知情 1 個月、訂立 2 年；違反告知是「解除」非終止！'
-      },
-      {
-        id: 102,
-        year: '111年',
-        category: '保險法規',
-        topic: '保險利益存在時點',
-        question: '財產保險之要保人對於保險標的物，最遲何時必須具有保險利益？',
-        options: [
-          '訂立契約時',
-          '繳納第一期保費時',
-          '保險事故發生時',
-          '提出索賠申請時'
-        ],
-        answer: 2, // C
-        lawBasis: '《保險法》第 14 條及最高法院判例',
-        explanation: '財產保險之核心為損害填補，因此要保人或被保險人於「保險事故發生時」必須對保險標的物具有保險利益，方能獲得賠償。',
-        details: [
-          '【產險 vs 人身險對照】：產險的保險利益在「事故發生時」必須存在；而人身保險（壽險）的保險利益則要求在「訂約時」存在即可。',
-          '【立法目的】：防止要保人對他人財物投保後蓄意破壞牟利（道德危險與賭博行為）。'
-        ],
-        mnemonic: '口訣：「產險看事發，壽險看訂約」—— 產物出事時要有利益才能賠。'
-      },
-      {
-        id: 103,
-        year: '110年',
-        category: '保險法規',
-        topic: '代位求償權',
-        question: '被保險人因第三者應負賠償責任之保險事故發生而受損害，保險人於給付賠償金額後，得在給付金額範圍內代位行使被保險人對第三人之請求權，此一原則稱為？',
-        options: [
-          '保險代位權（代位求償）',
-          '複保險分攤原則',
-          '主力近因原則',
-          '委付原則'
-        ],
-        answer: 0, // A
-        lawBasis: '《保險法》第 53 條',
-        explanation: '保險人理賠後，取得被保險人對加害第三人之損害賠償請求權，稱為「保險代位權」。',
-        details: [
-          '【限制與要件】：代位求償金額以「保險人實際給付之賠償金額」為限，且僅適用於「財產保險（損害保險）」，一般人身保險（人命無價）不適用保險代位。',
-          '【家屬豁免】：第三人若為被保險人之家屬或受僱人，原則上保險人無代位請求權（但因其故意所致者不在此限）。'
-        ],
-        mnemonic: '口訣：賠多少、代多少；產險代位防雙重獲利，人命無價不代位！'
-      },
-      {
-        id: 104,
-        year: '113年',
-        category: '保險法規',
-        topic: '業務員處分與管理',
-        question: '保險業務員受停止招攬行為處分期間，每次處分期間為何？',
-        options: [
-          '一個月以上，半年以下',
-          '三個月以上，一年以下',
-          '六個月以上，三年以下',
-          '一年以上，五年以下'
-        ],
-        answer: 1, // B
-        lawBasis: '《保險業務員管理規則》第 19 條',
-        explanation: '業務員有違規招攬情事時，各公會或所屬公司予以「停止招攬行為」處分者，每次期間為三個月以上，一年以下。',
-        details: [
-          '【累計撤銷登錄】：業務員受停止招攬行為處分期間「累計達二年」者，所屬公司應予以「撤銷業務員登錄」處分。',
-          '【撤銷再登錄限制】：被撤銷登錄者，自撤銷之日起三年內不得再行登錄。'
-        ],
-        mnemonic: '口訣：「停招 3 到 12 月，累計滿 2 年掰掰撤銷，3 年內不得重登」'
-      },
-      {
-        id: 105,
-        year: '109年',
-        category: '保險法規',
-        topic: '契約審閱期',
-        question: '依金融消費者保護法及相關規範，個人傳統型保險契約投保前，保險人應提供消費者多少期間之保單條款審閱期？',
-        options: [
-          '不得少於 1 日',
-          '不得少於 3 日',
-          '不得少於 7 日',
-          '不得少於 10 日'
-        ],
-        answer: 1, // B
-        lawBasis: '《保險業招攬及核保理賠辦法》第 6 條',
-        explanation: '保險業銷售個人傳統型保險商品時，應提供要保人不低於「三日」之條款審閱期間。',
-        details: [
-          '【注意除外】：特定旅行平安險、簡易型個人保險或要保人已簽署自願放棄審閱期聲明者除外。',
-          '【易混淆】：注意審閱期是「不得少於 3 日」，而壽險保單收到後的契約撤銷權則是「10 日內」。'
-        ],
-        mnemonic: '口訣：「買前看三天（審閱期），買後想十天（撤銷期）」'
-      },
-      {
-        id: 106,
-        year: '108年',
-        category: '保險法規',
-        topic: '保險金請求權消滅時效',
-        question: '由保險契約所生之權利，自得為請求之日起，經過幾年不行使而消滅？',
-        options: [
-          '一年',
-          '二年',
-          '五年',
-          '十五年'
-        ],
-        answer: 1, // B
-        lawBasis: '《保險法》第 65 條',
-        explanation: '由保險契約所生之權利，自「得為請求之日起」，經過「二年」不行使而消滅。',
-        details: [
-          '【起算點特殊規定】：',
-          '1. 要保人或被保險人對於危險之說明有隱匿遺漏者，自保險人「知有解除原因之日」起算。',
-          '2. 保險事故發生後請求保險金者，自「得為請求之日」起算。',
-          '3. 要保人或被保險人證明其非因疏忽而不知事故者，自「其知有保險事故之日」起算。'
-        ],
-        mnemonic: '口訣：「保險權利 2 年消，民法一般 15 年，保險特別採短期」'
-      },
-      {
-        id: 107,
-        year: '107年',
-        category: '保險法規',
-        topic: '超額保險效力',
-        question: '要保人意圖不當得利而為超額保險者，其保險契約之效力為何？',
-        options: [
-          '契約有效',
-          '契約得撤銷',
-          '契約無效',
-          '效力未定'
-        ],
-        answer: 2, // C
-        lawBasis: '《保險法》第 76 條',
-        explanation: '要保人「意圖不當得利（惡意）」而為超額保險者，契約「全部無效」。',
-        details: [
-          '【善意超額保險】：若要保人「非出於惡意（善意）」超額投保，契約僅在「保險標的價值之限度內為有效」；保險人無詐欺情事時，得請求至契約終止時之保費。',
-          '【禁止不當得利】：財產保險旨在填補損害，杜絕透過保險賺取超過標的價值的暴利。'
-        ],
-        mnemonic: '口訣：「惡意超額全無效，善意超額限額效」'
-      },
-      {
-        id: 108,
-        year: '111年',
-        category: '保險法規',
-        topic: '資本適足率規範',
-        question: '保險業資本適足率（RBC）分為四個等級，若保險業資本適足率低於多少百分比，即屬於「資本嚴重不足」？',
-        options: [
-          '低於 150%',
-          '低於 100%',
-          '低於 50%',
-          '低於 0%'
-        ],
-        answer: 2, // C
-        lawBasis: '《保險法》第 143 條之 4',
-        explanation: '資本適足率等級劃分標準：資本適足(>=200%)、資本不足(150%~200%)、資本顯著不足(50%~150%)、資本嚴重不足(低於50%或淨值低於零)。',
-        details: [
-          '【主管機關處置】：若保險業落入「資本嚴重不足」，主管機關應於期限內予以「接管、勒令停業清理或命令解散」。'
-        ],
-        mnemonic: '口訣：「200適足、150不足、50顯著、低於50嚴重危險」'
-      },
-
-      // --- 保險實務篇：汽車保險 ---
-      {
-        id: 201,
-        year: '113年',
-        category: '保險實務',
-        topic: '強制車險法定給付額度',
-        question: '現行「強制汽車責任保險」每一個人死亡給付與失能最高給付保險金額分別為多少？',
-        options: [
-          '死亡 150 萬元、失能 150 萬元',
-          '死亡 200 萬元、失能最高 200 萬元',
-          '死亡 250 萬元、失能最高 250 萬元',
-          '死亡 300 萬元、失能最高 300 萬元'
-        ],
-        answer: 1, // B
-        lawBasis: '《強制汽車責任保險給付標準》第 2、3 條',
-        explanation: '強制車險給付標準：每人死亡定額 200 萬元；失能按第 1 至 15 等級給付 5 萬至最高 200 萬元；傷害醫療每人最高 20 萬元。',
-        details: [
-          '【每人每次事故總上限】：每人每次事故最高給付合計可達 220 萬元（死亡/失能 200 萬 + 醫療 20 萬）。',
-          '【無過失責任】：受害人不論有無過失，均可在限額內向保險人請求給付或向特補基金申請補償。'
-        ],
-        mnemonic: '口訣：「強制車險 220：死殘 200 萬、醫藥 20 萬，人命有保障」'
-      },
-      {
-        id: 202,
-        year: '113年',
-        category: '保險實務',
-        topic: '微型電動二輪車納保罰則',
-        question: '依最新修正之強制汽車責任保險法，微型電動二輪車若未依規定投保強制車險，將處所有人新台幣多少元罰鍰？',
-        options: [
-          '500 元至 1,000 元',
-          '750 元至 1,500 元',
-          '1,200 元至 3,000 元',
-          '3,000 元至 15,000 元'
-        ],
-        answer: 1, // B
-        lawBasis: '《強制汽車責任保險法》第 49 條最新修正條文',
-        explanation: '微型電動二輪車（微電車）已全面納入強制車險管理，所有人未投保者，處新台幣 750 元以上 1,500 元以下罰鍰。',
-        details: [
-          '【汽機車罰鍰對照】：',
-          '• 微電車未投保：處 750 ～ 1,500 元。',
-          '• 機車未投保：處 1,500 ～ 3,000 元。',
-          '• 汽車未投保：處 3,000 ～ 15,000 元。',
-          '• 未投保肇事者：處 9,000 ～ 32,000 元。'
-        ],
-        mnemonic: '口訣：「微電 750-1500、機車 1500-3000、汽車 3000-15000」'
-      },
-      {
-        id: 203,
-        year: '110年',
-        category: '保險實務',
-        topic: '自用汽車車體損失險範圍',
-        question: '車主投保「自用汽車車體損失險丙式（車碰車）」，下列何種情形在承保理賠範圍內？',
-        options: [
-          '車輛停於路邊遭不明人士惡意刮損',
-          '倒車時不慎自撞自用車庫牆面',
-          '與領有牌照之他車擦撞且當場報警確認對方車輛',
-          '車輛因豪大雨淹水導致引擎故障'
-        ],
-        answer: 2, // C
-        lawBasis: '《自用汽車車體損失保險條款（甲/乙/丙式）》',
-        explanation: '丙式車體險僅承保「與其他車輛發生碰撞、擦撞」所致之損失，並以確認對方車輛為限。',
-        details: [
-          '【甲、乙、丙式對照表】：',
-          '• 甲式（最廣）：承保碰撞、傾覆、火災、雷擊、自燃、第三人非善意惡意刮損及其他不明原因損失。',
-          '• 乙式（常見）：承保碰撞、傾覆、火災、雷擊、自燃、拋擲物及自撞等，但不賠「不明原因刮損」。',
-          '• 丙式（經濟）：僅限「車碰車（對撞擦撞）」，自撞與不明刮損均不賠。',
-          '• 淹水泡水：屬於天災，各式皆需額外附加「颱風洪水險」。'
-        ],
-        mnemonic: '口訣：「丙式車碰車、乙式包自撞、甲式包不明、泡水加天災」'
-      },
-      {
-        id: 204,
-        year: '109年',
-        category: '保險實務',
-        topic: '任意第三人責任保險',
-        question: '自用小客車投保任意第三人責任保險，下列何人遭受體傷或死亡時，「不」屬於該保險之「第三人」理賠求償對象？',
-        options: [
-          '被撞之旅人與行人',
-          '對方車輛內之乘客',
-          '本車之駕駛人',
-          '對方車輛之駕駛人'
-        ],
-        answer: 2, // C
-        lawBasis: '《自用汽車第三人責任保險條款》第 1 條',
-        explanation: '第三人責任保險承保本車發生事故致「第三人」受傷或財損之賠償責任。本車駕駛人非第三人，不受本險保障。',
-        details: [
-          '【如何補足保障】：本車駕駛人之體傷需附加投保「駕駛人傷害保險」；本車上乘客之體傷需附加投保「乘客責任保險」。'
-        ],
-        mnemonic: '口訣：「第三人不包含自己人（本車駕駛與車主）」'
-      },
-
-      // --- 保險實務篇：火災保險與住宅地震險 ---
-      {
-        id: 301,
-        year: '112年',
-        category: '保險實務',
-        topic: '住宅地震基本保險額度',
-        question: '現行台灣「住宅地震基本保險」之最高保險金額及臨時住宿費用定額分別為多少？',
-        options: [
-          '保額 100 萬元、臨時住宿費 10 萬元',
-          '保額 120 萬元、臨時住宿費 15 萬元',
-          '保額 150 萬元、臨時住宿費 20 萬元',
-          '保額 200 萬元、臨時住宿費 30 萬元'
-        ],
-        answer: 2, // C
-        lawBasis: '《住宅地震基本保險危險分散機制實施辦法》',
-        explanation: '住宅地震基本保險最高保險金額以房屋「重置成本」計算，最高為 150 萬元，並定額給付臨時住宿費 20 萬元（合計 170 萬元）。',
-        details: [
-          '【全損理賠制】：地震基本險只在建物達「全損（全倒或半倒不堪居住，或修復費用達重置成本50%以上）」時才全額給付。輕微龜裂或局部破損不予理賠。',
-          '【擴大加保】：若保額 150 萬不足以涵蓋房屋價值，屋主可加保「超額地震險」或「擴大地震險」。'
-        ],
-        mnemonic: '口訣：「地震基本險：150 萬保額 + 20 萬住宿，達全損才給付！」'
-      },
-      {
-        id: 302,
-        year: '108年',
-        category: '保險實務',
-        topic: '火災保險 80% 共保條款計算',
-        question: '某工廠投保商業火險，約定「80% 共保條款」，標的實際價值為 1,000 萬元，投保保額為 600 萬元，發生火災損失 200 萬元，保險公司應賠償多少？',
-        options: [
-          '200 萬元',
-          '150 萬元',
-          '120 萬元',
-          '60 萬元'
-        ],
-        answer: 1, // B
-        lawBasis: '商業火災保險《共保條款（Coinsurance Clause）》',
-        explanation: '投保金額（600萬）未達約定應保金額（1000萬 × 80% = 800萬），應依比例扣減賠償。',
-        details: [
-          '【計算步驟】：',
-          '1. 應投保金額 = 實際價值 (1000萬) × 80% = 800 萬元。',
-          '2. 賠償比例 = 實際投保金額 (600萬) ÷ 應投保金額 (800萬) = 75%。',
-          '3. 實際賠償 = 損失金額 (200萬) × 75% = 150 萬元。'
-        ],
-        mnemonic: '口訣：「損失 × (保額 ÷ [價值 × 80%])」—— 不足額投保自負差額比例！'
-      },
-
-      // --- 保險實務篇：水險、責任險、傷害保險與防制洗錢 ---
-      {
-        id: 401,
-        year: '109年',
-        category: '保險實務',
-        topic: '海上貨物保險 - 共同海損',
-        question: '海上貨物保險中，凡船長為同一航程全體共同利益，在危急情勢下所為合理處分或犧牲所造成之損失，由全體受益方共同分攤，稱為？',
-        options: [
-          '單獨海損（Particular Average）',
-          '共同海損（General Average）',
-          '推定全損（Constructive Total Loss）',
-          '實質全損（Actual Total Loss）'
-        ],
-        answer: 1, // B
-        lawBasis: '《海商法》第 110 條及英國海上保險法 (MIA)',
-        explanation: '為免除船貨同一航程之共同危險，所為刻意且合理之犧牲或支出之非常費用，由船舶與貨物全體受益人按價值比例共同分攤，即為「共同海損（GA）」。',
-        details: [
-          '【單獨海損】：僅由該受損標的物所有人自行承擔之意外損失（如風浪浸水、碰撞部分損害）。'
-        ],
-        mnemonic: '口訣：「為大家拋貨犧牲是『共同海損』；自己倒楣受損是『單獨海損』」'
-      },
-      {
-        id: 402,
-        year: '113年',
-        category: '保險實務',
-        topic: '傷害保險（意外險）三要素',
-        question: '傷害保險（意外險）所界定之意外傷害事故，必須同時符合下列哪三大核心要件？',
-        options: [
-          '非疾病引起的、外來的、突發的',
-          '外來的、預期的、嚴重的',
-          '突發的、高額的、非自願的',
-          '自發的、瞬間的、身體的'
-        ],
-        answer: 0, // A
-        lawBasis: '《保險法》第 131 條第 2 項',
-        explanation: '傷害保險所稱意外傷害事故，指非由疾病引起之「外來」、「突發」事故，三要件缺一不可。',
-        details: [
-          '【三大要件意涵】：',
-          '1. 外來性：傷害原因來自自身體質或疾病以外之外部原因（如車禍、跌倒）。',
-          '2. 突發性：事故發生為不可預期且瞬間發生。',
-          '3. 非疾病性：非因個人體內器官病變、慢性病或感染性疾病所致。'
-        ],
-        mnemonic: '口訣：「外來、突發、非疾病」—— 意外險黃金三本柱'
-      },
-      {
-        id: 403,
-        year: '113年',
-        category: '保險法規',
-        topic: '洗錢防制法 - 實質受益人',
-        question: '保險業辦理確認客戶身分（CDD），客戶為法人時，直接或間接持有該法人股份或資本超過多少比例之自然人，應認定為實質受益人？',
-        options: [
-          '超過 10%',
-          '超過 15%',
-          '超過 25%',
-          '超過 50%'
-        ],
-        answer: 2, // C
-        lawBasis: '《保險業防制洗錢及打擊資恐內部控制與稽核制度實施辦法》第 6 條',
-        explanation: '辨識法人的實質受益人（UBO），依國際 FATF 標準與台灣法規，具控制權之持股門檻為「超過 25%」之自然人。',
-        details: [
-          '【穿透原則】：若由法人股東持股，需層層穿透直到找出持股超過 25% 的最終自然人股東。'
-        ],
-        mnemonic: '口訣：「實質受益人持股線：超過 25%（四分之一）」'
-      }
-    ];
-
-    // 高頻速記考點整理
-    const SUMMARY_NOTES = [
-      {
-        category: '必考數字精華排行榜',
-        items: [
-          { term: '保單審閱期', value: '不得少於 3 日', note: '個人傳統型險種' },
-          { term: '解約權行使時效', value: '知情 1 個月 / 訂約 2 年', note: '保險法 §64 違反告知義務' },
-          { term: '保險金請求權時效', value: '得請求之日起 2 年', note: '保險法 §65 消滅時效' },
-          { term: '業務員停招處分', value: '3 個月以上 1 年以下', note: '累計滿 2 年撤銷登錄' },
-          { term: '微電車未投保罰鍰', value: '750 ~ 1,500 元', note: '最新修訂強制車險罰則' },
-          { term: '實質受益人門檻', value: '持股/資本超過 25%', note: '洗錢防制法 CDD 規範' }
-        ]
-      },
-      {
-        category: '法定額度與核心條款對照',
-        items: [
-          { term: '強制車險 - 死亡/失能', value: '每人最高 200 萬元', note: '無過失責任 (1~15等級)' },
-          { term: '強制車險 - 傷害醫療', value: '每人最高 20 萬元', note: '急救、診療、接送、看護' },
-          { term: '住宅地震基本保險', value: '保額 150 萬 + 住宿 20 萬', note: '限「全損 (全倒/半倒/逾50%)」' },
-          { term: '共保條款理賠公式', value: '損失 × [保額 ÷ (價值 × 共保%)]', note: '不足額投保比例分攤' },
-          { term: '車體險等級劃分', value: '甲式(含不明) > 乙式(自撞) > 丙式(車碰車)', note: '天災泡水須加保天災險' }
-        ]
-      }
-    ];
+    const INITIAL_EXAM_DATABASE = {
+      "人身保險": [
+        { id: "L101", category: "人身保險", topic: "契約當事人與關係人", question: "人壽保險契約中，下列何者為契約當事人？", options: ["保險人及受益人", "被保險人及受益人", "要保人及保險人", "保險人及被保險人"], answer: 2, lawBasis: "《保險法》第 3、8 條", explanation: "保險契約當事人為「要保人」與「保險人」；被保險人與受益人則為契約關係人。", mnemonic: "口訣：要保人出錢、保險公司承保，兩人才是簽約當事人！" },
+        { id: "L102", category: "人身保險", topic: "契約撤銷權", question: "個人兩年期以上之人壽保險契約，要保人得於收到保險單翌日起算幾日內行使契約撤銷權？", options: ["5 日", "7 日", "10 日", "15 日"], answer: 2, lawBasis: "人壽保險單示範條款第 5 條", explanation: "要保人於收到保單翌日起算 10 日內，得以書面檢同保險單向保險人撤銷契約，契約自始無效並全額無息退還已繳保費。", mnemonic: "口訣：收到保單翌日起算「想 10 天」！" },
+        { id: "L103", category: "人身保險", topic: "未成年人死亡給付限制", question: "以未滿 15 歲之未成年人為被保險人訂立之人壽保險契約，其死亡給付於何時開始生效？", options: ["訂約日", "年滿 12 歲之日", "年滿 15 歲之日", "年滿 18 歲之日"], answer: 2, lawBasis: "《保險法》第 107 條", explanation: "以未滿 15 歲之未成年人為被保險人訂立之壽險，死亡給付於被保險人滿 15 歲之日起發生效力；未滿 15 歲前死亡僅得給付喪葬費用（限遺產稅喪葬費扣除額一半）。", mnemonic: "口訣：15 歲前身故不賠死亡險，只退保費或限額喪葬費！" },
+        { id: "L104", category: "人身保險", topic: "寬限期間與停效", question: "分期繳納保險費（年繳或半年繳）之保單，經催告到達翌日起逾多少日仍未交付保費時，契約效力停止？", options: ["15 日", "30 日", "60 日", "90 日"], answer: 1, lawBasis: "《保險法》第 116 條", explanation: "年繳或半年繳保費逾期未繳，保險人得催告，催告到達翌日起滿 30 日仍未交付，契約效力停止。", mnemonic: "口訣：催告到達隔天算，寬限 30 天仍不繳即停效。" },
+        { id: "L105", category: "人身保險", topic: "保單復效規定", question: "保險契約停止效力後，要保人得自停效日起幾年內向保險公司申請復效？", options: ["1 年", "2 年", "3 年", "5 年"], answer: 1, lawBasis: "《保險法》第 116 條第 3 項", explanation: "保險契約停止效力後，要保人得在停效日起二年內申請恢復效力。", mnemonic: "口訣：停效申請復效最長 2 年，逾期終止！" },
+        { id: "L106", category: "人身保險", topic: "傷害保險時效", question: "個人傷害保險中，被保險人自遭受意外傷害事故發生之日起幾日內致成死亡或失能者，保險公司應負給付責任？", options: ["90 日", "180 日", "365 日", "無天數限制"], answer: 1, lawBasis: "傷害保險單示範條款第 5 條", explanation: "意外事故發生日起 180 日以內致成死亡或失能者，保險公司應按保額給付。", mnemonic: "口訣：意外事故身故或失能，標準認定 180 日以內。" }
+      ],
+      "財產保險": [
+        { id: "P101", category: "財產保險", topic: "據實告知義務", question: "要保人或被保險人違反據實說明義務時，足以變更或減少保險人對危險之估計者，保險人得主張何種權利？", options: ["終止契約", "解除契約", "撤銷契約", "拒絕給付但契約仍有效"], answer: 1, lawBasis: "《保險法》第 64 條", explanation: "要保人違反告知義務時，保險人得解除契約，使契約自始無效。", mnemonic: "口訣：知一過二解除它！產壽險均同！" },
+        { id: "P102", category: "財產保險", topic: "強制汽車責任保險", question: "現行台灣「強制汽車責任保險」每一個人死亡給付與失能最高給付法定金額為多少？", options: ["死亡 150 萬元、失能 150 萬元", "死亡 200 萬元、失能最高 200 萬元", "死亡 250 萬元、失能最高 250 萬元", "死亡 300 萬元、失能最高 300 萬元"], answer: 1, lawBasis: "《強制汽車責任保險給付標準》", explanation: "法定給付：死亡定額 200 萬、失能最高 200 萬、醫療費用每人最高 20 萬元（合計最高 220 萬元）。", mnemonic: "口訣：強制險死亡 200 萬、醫療 20 萬，合計最高 220 萬！" },
+        { id: "P103", category: "財產保險", topic: "住宅地震基本保險", question: "住宅地震基本保險之最高保險金額與臨時住宿費用定額分別為多少？", options: ["保額 100 萬、住宿費 10 萬", "保額 120 萬、住宿費 15 萬", "保額 150 萬、住宿費 20 萬", "保額 200 萬、住宿費 30 萬"], answer: 2, lawBasis: "《住宅地震基本保險危險分散機制實施辦法》", explanation: "以重置成本計算，最高保額 150 萬元，並定額補貼臨時住宿費用 20 萬元，採「全損」理賠制。", mnemonic: "口訣：地震基本險 150 萬保額 + 20 萬住宿，全倒半倒不堪住才賠！" },
+        { id: "P104", category: "財產保險", topic: "車體損失保險", question: "自用汽車車體損失險丙式（車碰車），下列何種事故在承保理賠範圍內？", options: ["停於路邊遭不明刮傷", "倒車自撞自家水泥柱", "與領有牌照之他車碰撞且確認對方車輛", "颱風淹水造成引擎泡水受損"], answer: 2, lawBasis: "自用汽車車體損失險條款", explanation: "丙式車體險僅限「車碰車（對撞擦撞）」且必須確認對方號牌。", mnemonic: "口訣：丙式車碰車、乙式包自撞、甲式包不明刮傷！" },
+        { id: "P105", category: "財產保險", topic: "火災保險共保條款", question: "商業火災保險約定「80% 共保條款」，標的物實際價值 1,000 萬元，投保保額 600 萬元，發生火災損失 200 萬元，保險公司應賠償多少？", options: ["200 萬元", "150 萬元", "120 萬元", "60 萬元"], answer: 1, lawBasis: "商業火災保險共保條款", explanation: "理賠金額 = 損失 200萬 × [保額 600萬 ÷ (價值 1000萬 × 80%)] = 150萬元。", mnemonic: "口訣：投保金額不足約定共保成數時，按比例扣減自負差額！" },
+        { id: "P106", category: "財產保險", topic: "微型電動二輪車法規", question: "依最新修正之強制汽車責任保險法，微型電動二輪車若未依規定投保強制車險，將處所有人新台幣多少罰鍰？", options: ["500 元至 1,000 元", "750 元至 1,500 元", "1,200 元至 3,000 元", "3,000 元至 15,000 元"], answer: 1, lawBasis: "《強制汽車責任保險法》第 49 條", explanation: "未依規定投保者處 750 元至 1,500 元罰鍰；機車為 1,500~3,000 元；汽車為 3,000~15,000 元。", mnemonic: "口訣：微電車 750-1500、機車 1500-3000、汽車 3000-15000！" }
+      ],
+      "金融市場常識": [
+        { id: "F101", category: "金融市場常識", topic: "金融市場功能", question: "下列何者不是金融市場的主要功能？", options: ["提供金融工具交易的場所", "擔任資金需求者與供給者的橋樑", "促進投資活動的效率，提升經濟發展", "提供交易者投機的場所"], answer: 3, lawBasis: "金融市場常識題庫第 1 題", explanation: "金融市場之主要功能為引導資金配置，絕非提供投機場所。", mnemonic: "口訣：金融市場是資金調配橋樑，不是合法賭博投機場所！" },
+        { id: "F102", category: "金融市場常識", topic: "金融主管機關架構", question: "目前國內監理銀行、票券、證券及保險等金融機構的主管機關為：", options: ["財政部", "內政部", "金融監督管理委員會", "經濟部"], answer: 2, lawBasis: "金融市場常識題庫第 7 題", explanation: "金管會統一掌理所有金融市場監理。", mnemonic: "口訣：台灣金融大總管＝金管會！" },
+        { id: "F103", category: "金融市場常識", topic: "初級與次級市場", question: "下列那個市場主要是買賣「已發行流通」的證券？", options: ["發行市場", "短期資金市場", "初級市場", "次級市場"], answer: 3, lawBasis: "金融市場常識題庫第 15 題", explanation: "初級市場是新發行籌資，次級市場為二手流通交易市場。", mnemonic: "口訣：初級是新發行、次級是二手流通買賣！" },
+        { id: "F104", category: "金融市場常識", topic: "資本市場與貨幣市場", question: "區分「資本市場」和「貨幣市場」的差異主要在於：", options: ["金管會核准發行的數量", "證券發行期限的長短", "證券收益率", "以上皆是"], answer: 1, lawBasis: "金融市場常識題庫第 16 題", explanation: "一年期以內為貨幣市場；一年期以上為資本市場。", mnemonic: "口訣：一年以內叫貨幣，一年以上叫資本！" },
+        { id: "F105", category: "金融市場常識", topic: "洗錢防制申報門檻", question: "洗錢防制法規定金融機構對於達一定金額以上之單筆現金通貨交易應向指定機構申報，該金額為：", options: ["25 萬元", "50 萬元", "75 萬元", "100 萬元"], answer: 1, lawBasis: "金融市場常識題庫第 81 題", explanation: "單筆現金收付或換鈔達新台幣 50 萬元以上之通貨交易應申報。", mnemonic: "口訣：大額現金 50 萬，身分登記報調查局！" },
+        { id: "F106", category: "金融市場常識", topic: "存款保險保障", question: "現行每一存款人在同一家金融機構存款保險的最高保額為新台幣多少元？", options: ["新台幣 100 萬元", "新台幣 150 萬元", "新台幣 300 萬元", "新台幣 500 萬元"], answer: 2, lawBasis: "金融市場常識題庫第 84 題", explanation: "中央存保每一存款人最高保額為新台幣 300 萬元整。", mnemonic: "口訣：存保最高理賠 300 萬！" }
+      ],
+      "職業道德": [
+        { id: "E101", category: "職業道德", topic: "保險招攬規範", question: "金融從業人員從事保險招攬行為，下列那一項是錯的？", options: ["解釋保險商品內容及保單條款", "說明填寫要保書注意事項、轉送要保文件及保險單", "經所屬公司授權從事保險招攬行為", "可以向未經授權公司從事保險招攬行為"], answer: 3, lawBasis: "職業道德題庫第 1 題", explanation: "業務員僅得為所屬經授權公司招攬，絕不可向未經授權公司招攬。", mnemonic: "口訣：只能為自己登錄授權的公司招攬，跨公司偷賣違法！" },
+        { id: "E102", category: "職業道德", topic: "借牌與掛名懲處", question: "金融從業人員從事保險招攬時將本人登錄證提供他人進行招攬或掛名，會受到何種處分？", options: ["註銷登錄", "停止招攬 6 個月", "停止招攬 10 個月", "停止招攬 1 年"], answer: 1, lawBasis: "職業道德題庫第 5 條", explanation: "借牌掛名招攬者，所屬公司應處停止招攬行為 6 個月處分。", mnemonic: "口訣：借牌掛名招攬，停止招攬 6 個月起跳！" },
+        { id: "E103", category: "職業道德", topic: "獲利保證禁止", question: "投顧人員告訴投資人：「買這支股票保證六個月內給你 100% 的報酬。」違反了哪一原則？", options: ["禁止為獲利或損失負擔之保證", "公平分配原則", "忠實誠信原則", "專業原則"], answer: 0, lawBasis: "職業道德題庫第 74 題", explanation: "法規嚴禁從業人員向客戶承諾保證獲利或共同承擔損失。", mnemonic: "口訣：千言萬語，就是不能承諾『保證獲利』！" },
+        { id: "E104", category: "職業道德", topic: "保密原則", question: "基於職務獲得的客戶個人與交易資料，金融服務業從業人員應該如何做才正確？", options: ["轉賣給同業", "必須忠於保密原則，絕不對外洩露", "隨意丟棄在碎紙機旁", "提供給親朋好友參考"], answer: 1, lawBasis: "職業道德題庫第 431 題", explanation: "對客戶資料負有法定保密義務，在職與離職後皆同。", mnemonic: "口訣：客戶隱私與資料，在職離職都保密！" },
+        { id: "E105", category: "職業道德", topic: "利益衝突", question: "金融從業人員在接受客戶委託時，應將誰的利益置於其他利益之上？", options: ["委託的客戶", "公司", "自己", "其他特定大客戶"], answer: 0, lawBasis: "職業道德題庫第 146 題", explanation: "忠實義務之核心為「客戶利益優先」。", mnemonic: "口訣：客戶利益永遠擺第一，禁止利益衝突與自肥！" },
+        { id: "E106", category: "職業道德", topic: "代管印鑑禁止", question: "為提供便民服務，金融從業人員是否可以代客戶保管存摺、印鑑或已蓋章之空白取款條？", options: ["只要客戶同意即可", "絕對禁止代客戶保管存摺、印鑑及空白取款條", "VIP 客戶可代管", "親戚家人可代管"], answer: 1, lawBasis: "職業道德題庫第 11 題", explanation: "金管會理專十誡嚴格禁止代客保管任何重要取款憑證。", mnemonic: "口訣：存摺印章自己管，業務代管直接踩紅線！" }
+      ]
+    };
 
     function App() {
-      const [activeTab, setActiveTab] = useState('quiz'); // 'quiz', 'mistakes', 'bookmarks', 'notes'
-      const [studyMode, setStudyMode] = useState(false); // true: 背題速讀模式 (直接顯示詳解)
-      const [questions, setQuestions] = useState(TEN_YEAR_QUESTIONS);
+      const [currentSubject, setCurrentSubject] = useState('人身保險');
+      const [activeTab, setActiveTab] = useState('quiz');
+      const [studyMode, setStudyMode] = useState(false);
       const [currentIdx, setCurrentIdx] = useState(0);
       const [selectedAnswers, setSelectedAnswers] = useState({});
       const [showExplanation, setShowExplanation] = useState({});
-      const [selectedCategory, setSelectedCategory] = useState('全部');
       const [searchQuery, setSearchQuery] = useState('');
-
-      // 收藏本與錯題本
-      const [bookmarks, setBookmarks] = useState(() => {
-        try {
-          const s = localStorage.getItem('ins_10yr_v2_bookmarks');
-          return s ? JSON.parse(s) : [];
-        } catch { return []; }
-      });
-      const [mistakes, setMistakes] = useState(() => {
-        try {
-          const s = localStorage.getItem('ins_10yr_v2_mistakes');
-          return s ? JSON.parse(s) : [];
-        } catch { return []; }
-      });
-
-      // 模擬考狀態
+      const [bookmarks, setBookmarks] = useState(() => JSON.parse(localStorage.getItem('fin_all_bookmarks') || '{}'));
+      const [mistakes, setMistakes] = useState(() => JSON.parse(localStorage.getItem('fin_all_mistakes') || '{}'));
       const [isExamMode, setIsExamMode] = useState(false);
-      const [examTimer, setExamTimer] = useState(2400); // 40分鐘
+      const [examTimer, setExamTimer] = useState(2400);
+      const [examQuestions, setExamQuestions] = useState([]);
       const [examFinished, setExamFinished] = useState(false);
       const [examScore, setExamScore] = useState(null);
 
-      useEffect(() => {
-        try { localStorage.setItem('ins_10yr_v2_bookmarks', JSON.stringify(bookmarks)); } catch(e){}
-      }, [bookmarks]);
-
-      useEffect(() => {
-        try { localStorage.setItem('ins_10yr_v2_mistakes', JSON.stringify(mistakes)); } catch(e){}
-      }, [mistakes]);
-
-      // 考試倒數
+      useEffect(() => { localStorage.setItem('fin_all_bookmarks', JSON.stringify(bookmarks)); }, [bookmarks]);
+      useEffect(() => { localStorage.setItem('fin_all_mistakes', JSON.stringify(mistakes)); }, [mistakes]);
       useEffect(() => {
         let t = null;
-        if (isExamMode && !examFinished && examTimer > 0) {
-          t = setInterval(() => setExamTimer(prev => prev - 1), 1000);
-        } else if (examTimer === 0 && isExamMode && !examFinished) {
-          handleFinishExam();
-        }
+        if (isExamMode && !examFinished && examTimer > 0) t = setInterval(() => setExamTimer(p => p - 1), 1000);
+        else if (examTimer === 0 && isExamMode && !examFinished) handleFinishExam();
         return () => clearInterval(t);
       }, [isExamMode, examFinished, examTimer]);
 
-      // 動態題目篩選
+      const currentSubjectQuestions = useMemo(() => INITIAL_EXAM_DATABASE[currentSubject] || [], [currentSubject]);
+      const currentSubjectBookmarks = bookmarks[currentSubject] || [];
+      const currentSubjectMistakes = mistakes[currentSubject] || [];
+
       const filteredQuestions = useMemo(() => {
-        let list = [...questions];
-        if (activeTab === 'mistakes') list = list.filter(q => mistakes.includes(q.id));
-        if (activeTab === 'bookmarks') list = list.filter(q => bookmarks.includes(q.id));
-        if (selectedCategory !== '全部' && activeTab !== 'mistakes' && activeTab !== 'bookmarks') {
-          list = list.filter(q => q.category === selectedCategory);
-        }
+        if (isExamMode) return examQuestions;
+        let list = [...currentSubjectQuestions];
+        if (activeTab === 'mistakes') list = list.filter(q => currentSubjectMistakes.includes(q.id));
+        if (activeTab === 'bookmarks') list = list.filter(q => currentSubjectBookmarks.includes(q.id));
         if (searchQuery.trim()) {
           const q = searchQuery.toLowerCase();
-          list = list.filter(item =>
-            item.question.toLowerCase().includes(q) ||
-            item.topic.toLowerCase().includes(q) ||
-            item.explanation.toLowerCase().includes(q) ||
-            item.options.some(o => o.toLowerCase().includes(q))
-          );
+          list = list.filter(i => i.question.toLowerCase().includes(q) || i.topic.toLowerCase().includes(q) || i.options.some(o => o.toLowerCase().includes(q)));
         }
         return list;
-      }, [questions, activeTab, mistakes, bookmarks, selectedCategory, searchQuery]);
+      }, [currentSubjectQuestions, activeTab, currentSubjectMistakes, currentSubjectBookmarks, searchQuery, isExamMode, examQuestions]);
+
+      useEffect(() => { if (currentIdx >= filteredQuestions.length && filteredQuestions.length > 0) setCurrentIdx(0); }, [filteredQuestions.length, currentIdx]);
 
       const currentQuestion = filteredQuestions[currentIdx] || null;
 
       const handleSelectOption = (qId, optionIdx) => {
         if (examFinished && isExamMode) return;
         setSelectedAnswers(prev => ({ ...prev, [qId]: optionIdx }));
-
-        const q = questions.find(i => i.id === qId);
-        if (q && q.answer !== optionIdx && !mistakes.includes(qId)) {
-          setMistakes(prev => [...prev, qId]);
+        const q = currentSubjectQuestions.find(item => item.id === qId);
+        if (q && q.answer !== optionIdx && !currentSubjectMistakes.includes(qId)) {
+          setMistakes(prev => ({ ...prev, [currentSubject]: [...(prev[currentSubject] || []), qId] }));
         }
-        if (!isExamMode) {
-          setShowExplanation(prev => ({ ...prev, [qId]: true }));
-        }
+        if (!isExamMode) setShowExplanation(prev => ({ ...prev, [qId]: true }));
       };
 
       const toggleBookmark = (qId) => {
-        setBookmarks(prev => prev.includes(qId) ? prev.filter(id => id !== qId) : [...prev, qId]);
+        setBookmarks(prev => {
+          const cur = prev[currentSubject] || [];
+          const updated = cur.includes(qId) ? cur.filter(id => id !== qId) : [...cur, qId];
+          return { ...prev, [currentSubject]: updated };
+        });
       };
 
       const startMockExam = () => {
-        const shuffled = [...TEN_YEAR_QUESTIONS].sort(() => 0.5 - Math.random());
-        setQuestions(shuffled);
+        const pool = [...currentSubjectQuestions].sort(() => 0.5 - Math.random());
+        setExamQuestions(pool.slice(0, Math.min(50, pool.length)));
         setCurrentIdx(0);
         setSelectedAnswers({});
         setShowExplanation({});
@@ -537,306 +130,138 @@
         setExamFinished(false);
         setExamScore(null);
         setActiveTab('quiz');
-        setSelectedCategory('全部');
       };
 
       const handleFinishExam = () => {
         let correct = 0;
-        filteredQuestions.forEach(q => {
-          if (selectedAnswers[q.id] === q.answer) correct++;
-        });
-        const total = filteredQuestions.length;
+        examQuestions.forEach(q => { if (selectedAnswers[q.id] === q.answer) correct++; });
+        const total = examQuestions.length;
         const score = total > 0 ? Math.round((correct / total) * 100) : 0;
         setExamScore({ correct, total, score, passed: score >= 70 });
         setExamFinished(true);
       };
 
-      const formatTime = (secs) => {
-        const m = Math.floor(secs / 60);
-        const s = secs % 60;
-        return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-      };
+      const formatTime = (secs) => `${Math.floor(secs / 60).toString().padStart(2, '0')}:${(secs % 60).toString().padStart(2, '0')}`;
 
       return (
         <div className="min-h-screen flex flex-col justify-between max-w-3xl mx-auto p-3 sm:p-5">
-          {/* Header 頂部導航 */}
-          <header className="flex items-center justify-between py-3 border-b border-slate-800">
-            <div>
+          <header className="py-3 border-b border-slate-800 space-y-3">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="text-xl">🛡️</span>
-                <h1 className="font-extrabold text-base sm:text-lg text-white">產險業務員十年真題逐題詳解</h1>
-              </div>
-              <p className="text-[11px] text-slate-400">含法規依據 ‧ 詳細剖析 ‧ 避坑口訣</p>
-            </div>
-
-            <div className="flex items-center gap-2">
-              {/* 模式切換按鈕 (非考試時可用) */}
-              {!isExamMode && activeTab !== 'notes' && (
-                <button
-                  onClick={() => setStudyMode(!studyMode)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${
-                    studyMode
-                      ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-                      : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
-                  }`}
-                  title="切換是否直接顯示所有題目解答與法條"
-                >
-                  {studyMode ? '📖 背題模式' : '✍️ 測驗模式'}
-                </button>
-              )}
-
-              {isExamMode ? (
-                <div className="flex items-center gap-2">
-                  <span className="px-3 py-1 rounded-full text-xs font-mono bg-amber-500/20 text-amber-300 border border-amber-500/40">
-                    ⏱️ {formatTime(examTimer)}
-                  </span>
-                  <button onClick={handleFinishExam} className="px-3 py-1.5 rounded-lg bg-rose-600 text-white text-xs font-bold">
-                    交卷結算
-                  </button>
-                </div>
-              ) : (
-                <button onClick={startMockExam} className="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold">
-                  ⚡ 模擬測驗
-                </button>
-              )}
-            </div>
-          </header>
-
-          {/* Tab 標籤切換列 */}
-          <div className="grid grid-cols-4 gap-1.5 my-3 bg-slate-900 p-1.5 rounded-xl border border-slate-800 text-xs font-medium text-center">
-            <button
-              onClick={() => { setActiveTab('quiz'); setIsExamMode(false); }}
-              className={`py-2 rounded-lg transition-all ${activeTab === 'quiz' && !isExamMode ? 'bg-emerald-600 text-white font-bold' : 'text-slate-400 hover:text-white'}`}
-            >
-              📖 歷屆刷題
-            </button>
-            <button
-              onClick={() => { setActiveTab('mistakes'); setIsExamMode(false); }}
-              className={`py-2 rounded-lg transition-all ${activeTab === 'mistakes' ? 'bg-rose-600 text-white font-bold' : 'text-slate-400 hover:text-white'}`}
-            >
-              ❌ 錯題本 ({mistakes.length})
-            </button>
-            <button
-              onClick={() => { setActiveTab('bookmarks'); setIsExamMode(false); }}
-              className={`py-2 rounded-lg transition-all ${activeTab === 'bookmarks' ? 'bg-amber-600 text-white font-bold' : 'text-slate-400 hover:text-white'}`}
-            >
-              ⭐ 收藏 ({bookmarks.length})
-            </button>
-            <button
-              onClick={() => { setActiveTab('notes'); setIsExamMode(false); }}
-              className={`py-2 rounded-lg transition-all ${activeTab === 'notes' ? 'bg-indigo-600 text-white font-bold' : 'text-slate-400 hover:text-white'}`}
-            >
-              💡 考點速記
-            </button>
-          </div>
-
-          {/* 主要作答與詳解區域 */}
-          <main className="flex-1 space-y-3 pb-16">
-            {/* 考試結算看板 */}
-            {examFinished && examScore && (
-              <div className="p-5 rounded-2xl bg-slate-900 border border-slate-700 text-center space-y-2">
-                <h2 className="text-lg font-bold">{examScore.passed ? '🎉 測驗合格！已達標！' : '💪 還需加把勁！及格標準為 70 分'}</h2>
-                <p className="text-3xl font-mono font-extrabold text-emerald-400">{examScore.score} 分</p>
-                <p className="text-xs text-slate-400">答對 {examScore.correct} / 共 {examScore.total} 題</p>
-                <div className="flex justify-center gap-2 mt-3">
-                  <button onClick={() => { setExamFinished(false); setIsExamMode(false); }} className="px-3 py-1.5 rounded-lg bg-slate-800 text-xs">
-                    查看各題詳解
-                  </button>
-                  <button onClick={startMockExam} className="px-4 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-bold">
-                    再測一次
-                  </button>
+                <span className="text-2xl">🏛️</span>
+                <div>
+                  <h1 className="font-extrabold text-base sm:text-lg text-white">金融證照四大考科題庫系統</h1>
+                  <p className="text-[11px] text-slate-400">人身 ‧ 產險 ‧ 金融市場 ‧ 職業道德</p>
                 </div>
               </div>
-            )}
-
-            {/* 考點速記卡畫面 (Notes Tab) */}
-            {activeTab === 'notes' ? (
-              <div className="space-y-3">
-                {SUMMARY_NOTES.map((group, idx) => (
-                  <div key={idx} className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2.5">
-                    <h3 className="text-xs font-bold text-indigo-400 border-b border-slate-800 pb-1.5">{group.category}</h3>
-                    <div className="space-y-2">
-                      {group.items.map((item, i) => (
-                        <div key={i} className="p-2.5 rounded-lg bg-slate-950 border border-slate-850 flex justify-between items-start">
-                          <div>
-                            <p className="text-xs font-semibold text-slate-200">{item.term}</p>
-                            <p className="text-[11px] text-slate-500 mt-0.5">{item.note}</p>
-                          </div>
-                          <span className="text-xs font-bold text-emerald-400 font-mono bg-emerald-950 px-2 py-0.5 rounded border border-emerald-800/40">
-                            {item.value}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
+              <div className="flex items-center gap-2">
+                {!isExamMode ? (
+                  <>
+                    <button onClick={() => setStudyMode(!studyMode)} className={`px-3 py-1.5 rounded-lg text-xs font-bold border ${studyMode ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' : 'bg-slate-800 text-slate-300 border-slate-700'}`}>
+                      {studyMode ? '📖 背題模式' : '✍️ 測驗模式'}
+                    </button>
+                    <button onClick={startMockExam} className="px-3.5 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold">
+                      ⚡ 模擬考
+                    </button>
+                  </>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <span className="px-3 py-1 rounded-full text-xs font-mono bg-amber-500/20 text-amber-300 border border-amber-500/40">⏱️ {formatTime(examTimer)}</span>
+                    <button onClick={handleFinishExam} className="px-3 py-1.5 rounded-lg bg-rose-600 text-white text-xs font-bold">交卷</button>
                   </div>
+                )}
+              </div>
+            </div>
+            {!isExamMode && (
+              <div className="grid grid-cols-4 gap-1.5 bg-slate-900 p-1.5 rounded-xl border border-slate-800 text-xs font-bold text-center">
+                {['人身保險', '財產保險', '金融市場常識', '職業道德'].map(sub => (
+                  <button key={sub} onClick={() => { setCurrentSubject(sub); setCurrentIdx(0); setSelectedAnswers({}); setShowExplanation({}); }} className={`py-2 rounded-lg ${currentSubject === sub ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}>
+                    {sub}
+                  </button>
                 ))}
               </div>
-            ) : (
-              <>
-                {/* 篩選與搜尋欄 */}
-                {!isExamMode && (
-                  <div className="flex gap-2">
-                    <select
-                      value={selectedCategory}
-                      onChange={(e) => { setSelectedCategory(e.target.value); setCurrentIdx(0); }}
-                      className="bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-300"
-                    >
-                      <option value="全部">全部考科</option>
-                      <option value="保險法規">保險法規</option>
-                      <option value="保險實務">保險實務</option>
-                    </select>
-                    <input
-                      type="text"
-                      placeholder="搜尋考題（如：強制險、共保、消滅時效）..."
-                      value={searchQuery}
-                      onChange={(e) => { setSearchQuery(e.target.value); setCurrentIdx(0); }}
-                      className="flex-1 bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500"
-                    />
-                  </div>
-                )}
-
-                {/* 題目與詳細解析卡片 */}
-                {currentQuestion ? (
-                  <div className="p-4 sm:p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-4 shadow-lg">
-                    {/* 標籤列 */}
-                    <div className="flex justify-between items-center text-xs">
-                      <div className="flex gap-1.5 items-center flex-wrap">
-                        <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-mono">{currentQuestion.year}</span>
-                        <span className={`px-2 py-0.5 rounded ${currentQuestion.category === '保險法規' ? 'bg-blue-500/20 text-blue-400' : 'bg-emerald-500/20 text-emerald-400'}`}>
-                          {currentQuestion.category}
-                        </span>
-                        <span className="text-slate-400">{currentQuestion.topic}</span>
-                      </div>
-                      <button onClick={() => toggleBookmark(currentQuestion.id)} className="p-1.5 text-slate-400 hover:text-amber-400">
-                        {bookmarks.includes(currentQuestion.id) ? '⭐ 已收藏' : '☆ 收藏'}
-                      </button>
-                    </div>
-
-                    {/* 題目主體 */}
-                    <div className="space-y-1">
-                      <div className="text-[11px] text-slate-500 font-mono">
-                        第 {currentIdx + 1} 題 / 共 {filteredQuestions.length} 題
-                      </div>
-                      <p className="text-sm sm:text-base font-semibold text-slate-100 leading-relaxed">
-                        {currentQuestion.question}
-                      </p>
-                    </div>
-
-                    {/* 選項列表 */}
-                    <div className="space-y-2">
-                      {currentQuestion.options.map((opt, optIdx) => {
-                        const isSelected = selectedAnswers[currentQuestion.id] === optIdx;
-                        const isCorrect = currentQuestion.answer === optIdx;
-                        const hasAnswered = selectedAnswers[currentQuestion.id] !== undefined;
-                        const showAnswerVisual = (hasAnswered && !isExamMode) || studyMode;
-
-                        let style = "bg-slate-950 border-slate-850 text-slate-300 hover:border-slate-700";
-                        let badgeStyle = "bg-slate-800 text-slate-400";
-
-                        if (showAnswerVisual) {
-                          if (isCorrect) {
-                            style = "bg-emerald-950/80 border-emerald-500 text-emerald-200 font-bold";
-                            badgeStyle = "bg-emerald-600 text-white font-bold";
-                          } else if (isSelected && !isCorrect) {
-                            style = "bg-rose-950/80 border-rose-500 text-rose-200";
-                            badgeStyle = "bg-rose-600 text-white font-bold";
-                          }
-                        } else if (isSelected) {
-                          style = "bg-emerald-900/60 border-emerald-500 text-emerald-200 font-bold";
-                          badgeStyle = "bg-emerald-500 text-slate-950 font-bold";
-                        }
-
-                        return (
-                          <button
-                            key={optIdx}
-                            onClick={() => handleSelectOption(currentQuestion.id, optIdx)}
-                            className={`w-full p-3 rounded-xl border text-left text-xs sm:text-sm flex items-start gap-2.5 transition-all ${style}`}
-                          >
-                            <span className={`w-5 h-5 rounded-md text-center text-xs font-bold shrink-0 mt-0.5 flex items-center justify-center ${badgeStyle}`}>
-                              {['A','B','C','D'][optIdx]}
-                            </span>
-                            <span className="flex-1 leading-snug">{opt}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    {/* 完整詳細解析區塊 (答題後或開啟背題模式時展示) */}
-                    {((!isExamMode && (showExplanation[currentQuestion.id] || selectedAnswers[currentQuestion.id] !== undefined)) || studyMode) && (
-                      <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 text-xs space-y-3 mt-4 animate-in fade-in duration-200">
-                        {/* 正確解答與法條依據 */}
-                        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-850 pb-2">
-                          <div className="text-emerald-400 font-extrabold text-sm flex items-center gap-1">
-                            <span>✅ 正確解答：選項 {['A','B','C','D'][currentQuestion.answer]}</span>
-                          </div>
-                          {currentQuestion.lawBasis && (
-                            <span className="px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 font-medium text-[11px] border border-blue-500/30">
-                              📜 {currentQuestion.lawBasis}
-                            </span>
-                          )}
-                        </div>
-
-                        {/* 核心說明 */}
-                        <div className="space-y-1.5 text-slate-300 leading-relaxed">
-                          <p className="font-semibold text-slate-200">【核心解析】：</p>
-                          <p className="bg-slate-900/80 p-2.5 rounded-lg border border-slate-800/80">{currentQuestion.explanation}</p>
-                        </div>
-
-                        {/* 詳細分析與法規條文 */}
-                        {currentQuestion.details && currentQuestion.details.length > 0 && (
-                          <div className="space-y-1.5 text-slate-300 leading-relaxed">
-                            <p className="font-semibold text-slate-200">【深度法理與選項剖析】：</p>
-                            <div className="space-y-1 pl-1 text-[11px] text-slate-400">
-                              {currentQuestion.details.map((detail, dIdx) => (
-                                <p key={dIdx} className="leading-normal">{detail}</p>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* 記憶口訣 */}
-                        {currentQuestion.mnemonic && (
-                          <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-200 text-[11px] flex items-start gap-1.5">
-                            <span className="shrink-0">🎯</span>
-                            <span><strong>{currentQuestion.mnemonic}</strong></span>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* 翻頁與跳題控制 */}
-                    <div className="flex justify-between items-center pt-3 border-t border-slate-800 text-xs">
-                      <button
-                        onClick={() => setCurrentIdx(p => Math.max(0, p - 1))}
-                        disabled={currentIdx === 0}
-                        className="px-3.5 py-1.5 rounded-lg bg-slate-800 text-slate-300 disabled:opacity-30 hover:bg-slate-700"
-                      >
-                        上一題
-                      </button>
-                      <span className="text-slate-400 font-mono">{currentIdx + 1} / {filteredQuestions.length}</span>
-                      <button
-                        onClick={() => setCurrentIdx(p => Math.min(filteredQuestions.length - 1, p + 1))}
-                        disabled={currentIdx === filteredQuestions.length - 1}
-                        className="px-3.5 py-1.5 rounded-lg bg-emerald-600 font-bold text-white disabled:opacity-30 hover:bg-emerald-500"
-                      >
-                        下一題
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="p-8 text-center text-slate-500 text-xs bg-slate-900 rounded-2xl border border-slate-800">
-                    無符合條件之題目
-                  </div>
-                )}
-              </>
             )}
+          </header>
+
+          {!isExamMode && (
+            <div className="grid grid-cols-3 gap-2 my-2.5 text-xs text-center font-medium">
+              <button onClick={() => setActiveTab('quiz')} className={`py-1.5 rounded-lg border ${activeTab === 'quiz' ? 'bg-slate-800 text-emerald-400 border-emerald-500/40 font-bold' : 'bg-slate-900 text-slate-400 border-slate-800'}`}>📚 題庫 ({currentSubjectQuestions.length})</button>
+              <button onClick={() => setActiveTab('mistakes')} className={`py-1.5 rounded-lg border ${activeTab === 'mistakes' ? 'bg-rose-950/60 text-rose-300 border-rose-500/40 font-bold' : 'bg-slate-900 text-slate-400 border-slate-800'}`}>❌ 錯題本 ({currentSubjectMistakes.length})</button>
+              <button onClick={() => setActiveTab('bookmarks')} className={`py-1.5 rounded-lg border ${activeTab === 'bookmarks' ? 'bg-amber-950/60 text-amber-300 border-amber-500/40 font-bold' : 'bg-slate-900 text-slate-400 border-slate-800'}`}>⭐ 收藏 ({currentSubjectBookmarks.length})</button>
+            </div>
+          )}
+
+          <main className="flex-1 space-y-3 pb-16">
+            {examFinished && examScore && (
+              <div className="p-5 rounded-2xl bg-slate-900 border border-slate-700 text-center space-y-2">
+                <h2 className="text-lg font-bold">{examScore.passed ? '🎉 恭喜通過！達到 70 分合格！' : '💪 還差一點及格！及格標準 70 分'}</h2>
+                <p className={`text-4xl font-mono font-extrabold ${examScore.passed ? 'text-emerald-400' : 'text-rose-400'}`}>{examScore.score} 分</p>
+                <p className="text-xs text-slate-400">答對：{examScore.correct} / {examScore.total} 題</p>
+                <button onClick={() => { setExamFinished(false); setIsExamMode(false); }} className="mt-2 px-4 py-1.5 rounded-lg bg-slate-800 text-xs">查看逐題解析</button>
+              </div>
+            )}
+
+            {!isExamMode && (
+              <div className="relative">
+                <input type="text" placeholder={\`搜尋【\${currentSubject}】考題關鍵字...\`} value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setCurrentIdx(0); }} className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-200" />
+              </div>
+            )}
+
+            {currentQuestion ? (
+              <div className="p-4 sm:p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400">{currentQuestion.category} · {currentQuestion.topic}</span>
+                  <button onClick={() => toggleBookmark(currentQuestion.id)} className="text-slate-400 hover:text-amber-400">{currentSubjectBookmarks.includes(currentQuestion.id) ? '⭐ 已收藏' : '☆ 收藏'}</button>
+                </div>
+                <p className="text-sm sm:text-base font-semibold text-slate-100">{currentIdx + 1}. {currentQuestion.question}</p>
+                <div className="space-y-2">
+                  {currentQuestion.options.map((opt, idx) => {
+                    const isSelected = selectedAnswers[currentQuestion.id] === idx;
+                    const isCorrect = currentQuestion.answer === idx;
+                    const showAnswer = (selectedAnswers[currentQuestion.id] !== undefined && !isExamMode) || studyMode;
+                    let style = "bg-slate-950 border-slate-850 text-slate-300";
+                    if (showAnswer) {
+                      if (isCorrect) style = "bg-emerald-950/80 border-emerald-500 text-emerald-200 font-bold";
+                      else if (isSelected) style = "bg-rose-950/80 border-rose-500 text-rose-200";
+                    } else if (isSelected) style = "bg-emerald-900/60 border-emerald-500 text-emerald-200";
+                    return (
+                      <button key={idx} onClick={() => handleSelectOption(currentQuestion.id, idx)} className={\`w-full p-3 rounded-xl border text-left text-xs sm:text-sm flex items-start gap-2.5 \${style}\`}>
+                        <span className="w-5 h-5 rounded bg-slate-800 text-center text-xs font-bold shrink-0 mt-0.5">{['A','B','C','D'][idx]}</span>
+                        <span className="flex-1">{opt}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                {((selectedAnswers[currentQuestion.id] !== undefined && !isExamMode) || studyMode) && (
+                  <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 text-xs space-y-2">
+                    <p className="text-emerald-400 font-bold">✅ 正確答案：選項 {['A','B','C','D'][currentQuestion.answer]}</p>
+                    <p className="text-slate-300">{currentQuestion.explanation}</p>
+                    {currentQuestion.mnemonic && <div className="p-2 rounded bg-amber-500/10 border border-amber-500/30 text-amber-200">🎯 {currentQuestion.mnemonic}</div>}
+                  </div>
+                )}
+                <div className="flex justify-between items-center pt-2 border-t border-slate-800 text-xs">
+                  <button onClick={() => setCurrentIdx(p => Math.max(0, p - 1))} disabled={currentIdx === 0} className="px-3 py-1.5 rounded-lg bg-slate-800 disabled:opacity-30">上一題</button>
+                  <span className="text-slate-400 font-mono">{currentIdx + 1} / {filteredQuestions.length}</span>
+                  <button onClick={() => setCurrentIdx(p => Math.min(filteredQuestions.length - 1, p + 1))} disabled={currentIdx === filteredQuestions.length - 1} className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-bold disabled:opacity-30">下一題</button>
+                </div>
+              </div>
+            ) : <div className="p-8 text-center text-slate-500 text-xs bg-slate-900 rounded-xl">目前分類無題目</div>}
           </main>
         </div>
       );
     }
-
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<App />);
-  </script>
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  <\/script>
 </body>
-</html>
+</html>`;
+
+  const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8;' });
+  const downloadLink = document.createElement('a');
+  downloadLink.href = URL.createObjectURL(blob);
+  downloadLink.download = '金融與保險證照通關題庫.html';
+  document.body.appendChild(downloadLink);
+  downloadLink.click();
+  document.body.removeChild(downloadLink);
+  console.log('✅ 下載成功！檔案已存至您的下載資料夾。');
+})();
+
